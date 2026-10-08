@@ -8,7 +8,10 @@
  * @module
  */
 
+import type * as compare from "../compare.js";
+import type * as comparisonRules from "../comparisonRules.js";
 import type * as http from "../http.js";
+import type * as readPublicSource from "../readPublicSource.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +20,10 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  compare: typeof compare;
+  comparisonRules: typeof comparisonRules;
   http: typeof http;
+  readPublicSource: typeof readPublicSource;
 }>;
 
 /**
