@@ -9,11 +9,16 @@ export function noData(name: string): Evidence {
 export function normalizeText(text: string): string {
   return text.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9.]+/gi, " ").toLowerCase().trim().replace(/\s+/g, " ").replace(/\bco\s*2\s*e\b/g, "co2e");
 }
+function containsPhrase(text: string, phrase: string): boolean {
+  const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?<![a-z0-9.])${escaped}(?![a-z0-9])`).test(text);
+}
 export function validateEvidence(item: Evidence, citedUrls: Set<string>, sourceText: string): Evidence {
   if (item.status !== "found") return noData(item.name);
   if (!citedUrls.has(item.sourceUrl) || !item.sourceName || !item.basis || !item.boundary || !item.comparisonKey || item.kgCO2e === null || !Number.isFinite(item.kgCO2e) || item.kgCO2e <= 0) return noData(item.name);
   const text = normalizeText(sourceText), figure = normalizeText(item.sourceFigure), excerpt = normalizeText(item.excerpt);
-  if (!/\bkg\s*co2\s*e\b/.test(figure) || !figure.split(" ").includes(String(item.kgCO2e)) || !text.includes(figure) || !text.includes(excerpt) || excerpt.split(" ").length < 3 || excerpt.split(" ").length > 25) return noData(item.name);
+  const numericFigure = /^(\d+(?:\.\d+)?) kg co2e$/.exec(figure);
+  if (!numericFigure || Number(numericFigure[1]) !== item.kgCO2e || !containsPhrase(text, figure) || !containsPhrase(text, excerpt) || !containsPhrase(excerpt, figure) || excerpt.split(" ").length < 3 || excerpt.split(" ").length > 25) return noData(item.name);
   return item;
 }
 export function recommendation(products: Evidence[]): string {

@@ -1,10 +1,13 @@
 "use node";
 import { lookup } from "node:dns/promises";
+import { setDefaultResultOrder } from "node:dns";
 import { isIP } from "node:net";
+import { pdfPageText } from "./pdfText";
 // Static imports let Convex include the PDF engine and its worker in the deployment.
 // @ts-expect-error The bundled PDF engine has no TypeScript declarations.
 import PDFJS from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
 PDFJS.disableWorker = true;
+setDefaultResultOrder("ipv4first");
 function privateAddress(address: string): boolean {
   if (isIP(address) === 6) return true;
   const [a, b] = address.split(".").map(Number);
@@ -16,7 +19,7 @@ export async function readPublicSource(rawUrl: string): Promise<string> {
     if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) return "";
     const addresses = await lookup(url.hostname, { all: true, family: 4 });
     if (!addresses.length || addresses.some(a => privateAddress(a.address))) return "";
-    const response = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(15000) });
+    const response = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(25000) });
     if (response.status >= 300 && response.status < 400) {
       const next = response.headers.get("location"); await response.body?.cancel();
       if (!next) return "";
@@ -39,7 +42,7 @@ export async function readPublicSource(rawUrl: string): Promise<string> {
         for (let i = 1; i <= document.numPages; i++) {
           const page = await document.getPage(i);
           const content = await page.getTextContent();
-          pages.push(content.items.map((item: { str: string }) => item.str).join(" "));
+          pages.push(`[Page ${i}]\n${pdfPageText(content.items)}`);
         }
         return pages.join("\n");
       } finally { await document.destroy(); }

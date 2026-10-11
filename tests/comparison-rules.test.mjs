@@ -18,6 +18,15 @@ test('missing or incompatible evidence never produces a winner', () => {
   assert.match(recommendation([product, {...product, comparisonKey: 'production-only'}]), /cannot recommend/);
   assert.match(recommendation([product, {...product, comparable: false}]), /cannot recommend/);
 });
+test('a quote must contain the proposed figure, not an unrelated number elsewhere in a report', () => {
+  const text = 'Total product footprint 56 kg CO₂e. Production alone is 12 kg CO₂e.';
+  assert.equal(validateEvidence({...product, excerpt:'Production alone is 12 kg CO₂e'}, new Set([sourceUrl]), text).status, 'no_data');
+});
+test('a figure cannot match part of a larger number and printed decimal precision is preserved', () => {
+  assert.equal(validateEvidence({...product, excerpt:'156 kg CO₂e'}, new Set([sourceUrl]), '156 kg CO₂e').status, 'no_data');
+  const decimal = {...product, sourceFigure:'56.0 kg CO₂e', excerpt:'56.0 kg CO₂e'};
+  assert.equal(validateEvidence(decimal, new Set([sourceUrl]), decimal.excerpt).sourceFigure, '56.0 kg CO₂e');
+});
 test('lower comparable figure wins; a tie is explicit', () => {
   assert.match(recommendation([product, {...product, name: 'Phone B', kgCO2e: 60}]), /^Pick Phone A 128GB.*4 kg CO2e lower\.$/);
   assert.match(recommendation([product, product]), /same published estimate/);

@@ -28,10 +28,11 @@ function App() {
   const [second, setSecond] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
+  const [previous, setPrevious] = useState(false);
   const [error, setError] = useState("");
   async function submit(event) {
     event.preventDefault(); if (busy) return;
-    setBusy(true); setError(""); setResult(null);
+    setBusy(true); setError(""); setResult(null); setPrevious(false);
     try {
       const reply = await compare({ first: first.trim(), second: second.trim() });
       if (reply.error) setError(reply.error); else setResult(reply);
@@ -43,13 +44,13 @@ function App() {
     <main>
       <section className="intro"><h1>Two products.<br />A lighter choice.</h1><p>Compare their estimated carbon footprints, with the public figures behind every number.</p></section>
       <form onSubmit={submit} aria-label="Compare products">
-        <div className="inputs"><label htmlFor="first">First product<input id="first" value={first} onChange={e => setFirst(e.target.value)} placeholder="e.g. Apple iPhone 16 128GB" required maxLength={120} disabled={busy} /></label><span className="versus" aria-hidden="true">vs</span><label htmlFor="second">Second product<input id="second" value={second} onChange={e => setSecond(e.target.value)} placeholder="e.g. Apple iPhone 16 Plus 128GB" required maxLength={120} disabled={busy} /></label></div>
+        <div className="inputs"><label htmlFor="first">First product<input id="first" value={first} onChange={e => { setFirst(e.target.value); if (result) setPrevious(true); }} placeholder="e.g. Apple iPhone 16 128GB" required maxLength={120} disabled={busy} /></label><span className="versus" aria-hidden="true">vs</span><label htmlFor="second">Second product<input id="second" value={second} onChange={e => { setSecond(e.target.value); if (result) setPrevious(true); }} placeholder="e.g. Apple iPhone 16 Plus 128GB" required maxLength={120} disabled={busy} /></label></div>
         <div className="form-bottom"><p>Include the brand, model and size for a precise match.</p><button type="submit" disabled={busy || !first.trim() || !second.trim()}>{busy ? "Checking public sources…" : "Compare footprints"}</button></div>
       </form>
       <div aria-live="polite" aria-busy={busy}>
         {busy && <p className="loading" role="status">Looking for product-specific reports and checking their figures. This can take about a minute.</p>}
         {error && <p className="error" role="alert">{error}</p>}
-        {result && <section className="results" aria-label="Comparison result"><h2>Your comparison</h2><div className="product-columns">{result.products.map((p, i) => <ProductResult key={i} product={p} />)}</div><div className="recommendation"><h3>The choice</h3><p>{result.recommendation}</p></div><p className="result-note">Published estimates, not measurements of your individual purchase. Sources may use different assumptions; a winner is shown only for comparable figures.</p></section>}
+        {result && <section className="results" aria-label="Comparison result"><h2>{previous ? "Previous comparison" : "Your comparison"}</h2><div className="product-columns">{result.products.map((p, i) => <ProductResult key={i} product={p} />)}</div><div className="recommendation"><h3>The choice</h3><p>{result.recommendation}</p></div><p className="result-note">Published estimates, not measurements of your individual purchase. Sources may use different assumptions; a winner is shown only for comparable figures.</p></section>}
       </div>
       {!result && !busy && <aside className="method"><h2>A number needs a source.</h2><p>We look for a report about the exact product, show its original figure, and check that the two estimates cover the same amount and life stages. If we cannot verify a figure, you’ll see “no reliable data for this one”.</p></aside>}
     </main>

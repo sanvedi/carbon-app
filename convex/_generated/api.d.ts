@@ -11,7 +11,9 @@
 import type * as compare from "../compare.js";
 import type * as comparisonRules from "../comparisonRules.js";
 import type * as http from "../http.js";
+import type * as pdfText from "../pdfText.js";
 import type * as readPublicSource from "../readPublicSource.js";
+import type * as sourceDiscovery from "../sourceDiscovery.js";
 
 import type {
   ApiFromModules,
@@ -23,7 +25,9 @@ declare const fullApi: ApiFromModules<{
   compare: typeof compare;
   comparisonRules: typeof comparisonRules;
   http: typeof http;
+  pdfText: typeof pdfText;
   readPublicSource: typeof readPublicSource;
+  sourceDiscovery: typeof sourceDiscovery;
 }>;
 
 /**
